@@ -1,4 +1,5 @@
-const app = require("express")();
+const express = require("express");
+const app = express();
 let chrome = {};
 let puppeteer;
 
@@ -16,7 +17,7 @@ app.get("/api", async (req, res) => {
       args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
       defaultViewport: chrome.defaultViewport,
       executablePath: await chrome.executablePath,
-      headless: true,
+      headless: chrome.headless,
       ignoreHTTPSErrors: true,
     };
   }
@@ -25,9 +26,11 @@ app.get("/api", async (req, res) => {
     let browser = await puppeteer.launch(options);
     let page = await browser.newPage();
     await page.goto("https://www.google.com");
-    res.send(await page.title());
+    const title = await page.title();
+    await browser.close();
+    res.send(title);
   } catch (err) {
-    console.error(err);
+    console.error("Error launching Puppeteer:", err);
     res.status(500).send("Error launching Puppeteer");
   }
 });
@@ -36,8 +39,8 @@ app.get("/api/welcome", (req, res) => {
   res.send("أهلاً بك في API الخاص بنا!");
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
+app.listen(3000, () => {
+  console.log("Server started on port 3000");
 });
 
 module.exports = app;
